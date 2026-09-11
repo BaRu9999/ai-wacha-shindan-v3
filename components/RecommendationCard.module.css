@@ -1,0 +1,157 @@
+.card {
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease;
+}
+
+.staffMode {
+  box-shadow: 0 0 0 2px var(--green), var(--shadow-card);
+}
+
+.image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--washi-2);
+}
+
+.image img {
+  object-fit: cover;
+}
+
+.body {
+  padding: 20px 22px 22px;
+}
+
+.label {
+  margin: 0 0 6px;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.title {
+  font-size: 19px;
+  line-height: 1.6;
+  color: var(--sumi);
+}
+
+.reason {
+  margin-top: 10px;
+  color: var(--sumi-2);
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.kidsNote {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--cha-tint);
+  color: var(--cha);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.kidsNote strong {
+  font-weight: 700;
+}
+
+.actions {
+  margin-top: 16px;
+}
+
+.menuButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--green-deep);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  background: var(--green-tint);
+}
+
+.menuDetail {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--rule-strong);
+  animation: open 0.25s ease both;
+}
+
+.menuList {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.menuList li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: var(--sumi-2);
+  font-size: 13px;
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 14px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+  color: var(--sumi-3);
+  font-size: 11px;
+}
+
+.total strong {
+  color: var(--sumi);
+  font-size: 15px;
+}
+
+.staffButton {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  background: var(--green-tint);
+  color: var(--green-deep);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.staffHint {
+  margin-top: 10px;
+  text-align: center;
+  color: var(--green-deep);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@keyframes open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

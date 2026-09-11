@@ -1,0 +1,48 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--green);
+  border-radius: 50%;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.brand {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--sumi);
+}
+
+.branch {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--sumi-3);
+}
+
+.logo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+}

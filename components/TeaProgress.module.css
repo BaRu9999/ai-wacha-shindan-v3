@@ -1,0 +1,26 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cup {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.water {
+  transition: y 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.count {
+  font-family: var(--font-serif);
+  color: var(--sumi-3);
+  font-size: 12px;
+}
+
+.count strong {
+  color: var(--green-deep);
+  font-size: 20px;
+}

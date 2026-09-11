@@ -1,0 +1,93 @@
+.screen {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  width: 100%;
+  min-height: 60dvh;
+  padding: 40px 32px;
+  border: 0;
+  background: radial-gradient(60% 40% at 50% 42%, var(--washi), transparent 70%);
+  text-align: center;
+  cursor: pointer;
+  animation: fade 0.4s ease both;
+}
+
+.cup {
+  position: relative;
+  font-size: 54px;
+  line-height: 1;
+  animation: float 2.6s ease-in-out infinite;
+}
+
+.steam {
+  position: absolute;
+  top: -18px;
+  width: 8px;
+  height: 26px;
+  border-left: 2px solid rgba(71, 98, 74, 0.4);
+  border-radius: 40%;
+  opacity: 0;
+  animation: rise 2.1s ease-in-out infinite;
+}
+
+.steam:nth-child(1) {
+  left: 30%;
+}
+.steam:nth-child(2) {
+  left: 50%;
+  animation-delay: 0.5s;
+}
+.steam:nth-child(3) {
+  left: 68%;
+  animation-delay: 1s;
+}
+
+.message {
+  max-width: 18em;
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 1.9;
+  color: var(--green-deep);
+}
+
+.tapHint {
+  color: var(--sumi-3);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scaleX(0.8);
+  }
+  40% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scaleX(1.15);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

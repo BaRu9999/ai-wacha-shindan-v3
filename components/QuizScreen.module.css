@@ -1,0 +1,144 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 26px 26px 34px;
+  animation: fade 0.4s ease both;
+}
+
+.head {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 26px;
+}
+
+.fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: auto;
+}
+
+.legend {
+  display: block;
+  width: 100%;
+  padding: 0;
+}
+
+.qNumber {
+  display: inline-block;
+  color: var(--gold);
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.title {
+  min-height: 3.9em;
+  margin: 10px 0 8px;
+  font-size: 21px;
+  line-height: 1.7;
+  color: var(--sumi);
+}
+
+.hint {
+  display: block;
+  color: var(--sumi-3);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.choices {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 62px;
+  padding: 14px 16px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow-soft);
+  color: var(--sumi);
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.12s ease;
+}
+
+.choice:hover {
+  border-color: var(--green);
+  background: #fefdfa;
+}
+
+.choice:active {
+  transform: translateY(1px);
+}
+
+/* 押したときに柔らかく広がる波紋 */
+.choice::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--green-tint);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: none;
+}
+
+.choice:active::after {
+  animation: ripple 0.5s ease-out;
+}
+
+.choiceLabel {
+  position: relative;
+  z-index: 1;
+}
+
+.chevron {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  color: var(--sumi-3);
+  font-size: 20px;
+  line-height: 1;
+}
+
+@keyframes ripple {
+  from {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(26);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

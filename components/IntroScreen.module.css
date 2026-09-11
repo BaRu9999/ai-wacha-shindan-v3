@@ -1,0 +1,139 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 46px 30px 40px;
+  text-align: center;
+  animation: fade 0.45s ease both;
+}
+
+.eyebrow {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  margin-bottom: 14px;
+}
+
+.title {
+  font-size: clamp(30px, 8vw, 38px);
+  line-height: 1.45;
+  color: var(--sumi);
+  letter-spacing: 0.06em;
+}
+
+.lead {
+  margin-top: 22px;
+  color: var(--sumi-2);
+  font-size: 15px;
+  line-height: 2;
+}
+
+.lead strong {
+  color: var(--green-deep);
+  font-weight: 700;
+}
+
+.teaList {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin: 30px 0 32px;
+  padding: 0;
+  list-style: none;
+}
+
+.teaChip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 4px 4px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--washi);
+  color: var(--sumi-2);
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--green);
+  color: var(--paper);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.12s ease;
+}
+
+.start:hover {
+  background: var(--green-deep);
+}
+
+.start:active {
+  transform: translateY(1px);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 20px 0 0;
+  color: var(--sumi-3);
+}
+
+.meta div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meta dt {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+}
+
+.meta dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sumi-2);
+}
+
+.metaSep {
+  width: 1px;
+  height: 22px;
+  background: var(--rule-strong);
+}
+
+.note {
+  margin-top: 16px;
+  color: var(--sumi-3);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

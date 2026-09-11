@@ -1,0 +1,36 @@
+.wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--green);
+  color: var(--paper);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--green-deep);
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.status {
+  margin: 0;
+  color: var(--sumi-3);
+  font-size: 12px;
+  text-align: center;
+}
