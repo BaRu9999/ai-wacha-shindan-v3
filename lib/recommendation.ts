@@ -124,7 +124,7 @@ const setPlanByType: Record<TeaKey, Partial<Record<Lean, string>>> = {
   matcha: { sweet: "matcha-sweet", drink: "matcha-drink" },
   hojicha: { light: "hojicha-light", drink: "hojicha-drink" },
   wakoucha: { sweet: "wakoucha-sweet" },
-  kuwacha: { light: "kuwacha-plate" },
+  kuwacha: { light: "kuwacha-plate", sweet: "kuwacha-sweet" },
   biwa: { drink: "biwa-drink" },
   rooibos: { sweet: "rooibos-sweet", light: "rooibos-light" },
 };
@@ -155,7 +155,10 @@ export function chooseSetId(teaKey: TeaKey, signals: RecommendationSignals): str
 export type Recommendation = {
   setId: string;
   items: Product[];
+  /** 価格が判明している商品だけの合計。1点でも price が null の商品があれば hasUnpricedItem が true になる。 */
   totalPrice: number;
+  /** true の場合、totalPrice は全商品の金額を表さない（店舗で価格非掲載の商品を含む）。 */
+  hasUnpricedItem: boolean;
   /** フォールバックのおすすめ理由（AI が上書きすることがある）。 */
   reason: string;
   heroImage: string;
@@ -186,7 +189,8 @@ export function recommend(
   return {
     setId,
     items,
-    totalPrice: items.reduce((sum, product) => sum + product.price, 0),
+    totalPrice: items.reduce((sum, product) => sum + (product.price ?? 0), 0),
+    hasUnpricedItem: items.some((product) => product.price === null),
     reason: productSets[setId]?.reason ?? "",
     heroImage: items[0]?.image ?? teaImage[teaKey],
   };

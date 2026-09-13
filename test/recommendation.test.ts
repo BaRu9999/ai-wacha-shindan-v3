@@ -69,8 +69,9 @@ describe("推薦の基本性質", () => {
           expect(item.status).toBe("active");
         }
         expect(rec.totalPrice).toBe(
-          rec.items.reduce((sum, item) => sum + item.price, 0),
+          rec.items.reduce((sum, item) => sum + (item.price ?? 0), 0),
         );
+        expect(rec.hasUnpricedItem).toBe(rec.items.some((item) => item.price === null));
         expect(Number.isInteger(rec.totalPrice)).toBe(true);
         expect(rec.heroImage).toMatch(/^\/menu\/.+\.jpg$/);
       }
@@ -113,6 +114,23 @@ describe("同じタイプでも回答で提案が変わる", () => {
     const withKids = chooseSetId("rooibos", deriveSignals(base, "sweet"));
     expect(withoutKids).toBe("rooibos-light");
     expect(withKids).toBe("rooibos-sweet");
+  });
+});
+
+describe("価格非掲載の商品（タニタコラボプレート）", () => {
+  it("price が null の商品を含むときは hasUnpricedItem が true になり、合計には含めない", () => {
+    const plateAnswer = answersFrom({ q1: "q1d", q4: "q4c", q5: "q5b", q6: "q6c" });
+    const rec = recommend("kuwacha", plateAnswer, null);
+    expect(rec.setId).toBe("kuwacha-plate");
+
+    const plateItem = rec.items.find((item) => item.id === "tanita-plate-sawara");
+    expect(plateItem?.price).toBeNull();
+    expect(rec.hasUnpricedItem).toBe(true);
+
+    const drinkOnlyTotal = rec.items
+      .filter((item) => item.price !== null)
+      .reduce((sum, item) => sum + (item.price ?? 0), 0);
+    expect(rec.totalPrice).toBe(drinkOnlyTotal);
   });
 });
 

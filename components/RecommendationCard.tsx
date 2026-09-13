@@ -10,6 +10,7 @@ type Props = {
   heroImage: string;
   items: Product[];
   totalPrice: number;
+  hasUnpricedItem: boolean;
   reason: string;
   kidsRewardLabel: string | null;
 };
@@ -24,6 +25,7 @@ export function RecommendationCard({
   heroImage,
   items,
   totalPrice,
+  hasUnpricedItem,
   reason,
   kidsRewardLabel,
 }: Props) {
@@ -83,14 +85,23 @@ export function RecommendationCard({
               {items.map((item) => (
                 <li key={item.id}>
                   <span>{item.name}</span>
-                  <span>¥{yen.format(item.price)}</span>
+                  <span>
+                    {item.price === null ? "価格は店舗にてご確認ください" : `¥${yen.format(item.price)}`}
+                  </span>
                 </li>
               ))}
             </ul>
-            <p className={styles.total}>
-              <span>合計目安</span>
-              <strong>¥{yen.format(totalPrice)}</strong>
-            </p>
+            {hasUnpricedItem ? (
+              <p className={styles.total}>
+                <span>合計目安（一部商品を除く）</span>
+                <strong>¥{yen.format(totalPrice)}〜</strong>
+              </p>
+            ) : (
+              <p className={styles.total}>
+                <span>合計目安</span>
+                <strong>¥{yen.format(totalPrice)}</strong>
+              </p>
+            )}
             <button type="button" className={styles.staffButton} onClick={toggleStaff}>
               {staffMode ? "スタッフへの表示を終える" : "スタッフに見せる"}
             </button>

@@ -102,11 +102,19 @@
 }
 
 .menuList li {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: baseline;
-  justify-content: space-between;
+  gap: 4px 14px;
   color: var(--sumi-2);
   font-size: 13px;
+  line-height: 1.6;
+}
+
+.menuList li span:last-child {
+  text-align: right;
+  color: var(--sumi-3);
+  font-size: 12px;
 }
 
 .total {

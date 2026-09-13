@@ -80,6 +80,7 @@ export function ResultScreen({
         heroImage={recommendation.heroImage}
         items={recommendation.items}
         totalPrice={recommendation.totalPrice}
+        hasUnpricedItem={recommendation.hasUnpricedItem}
         reason={recommendationReason}
         kidsRewardLabel={kidsRewardLabel}
       />
