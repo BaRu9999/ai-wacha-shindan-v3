@@ -4,12 +4,16 @@ import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { store } from "@/data/store";
 import { parseInviter } from "@/lib/share";
+import { isRecommendationMode } from "@/lib/recommendation";
 import { useDiagnosisFlow } from "@/hooks/useDiagnosisFlow";
 import { BrandHeader } from "./BrandHeader";
 import { TeaLeaves } from "./TeaLeaves";
 import { IntroScreen } from "./IntroScreen";
 import { QuizScreen } from "./QuizScreen";
 import { InterludeScreen } from "./InterludeScreen";
+import { KidsGateScreen } from "./KidsGateScreen";
+import { KidsQuestionScreen } from "./KidsQuestionScreen";
+import { KidsRevealScreen } from "./KidsRevealScreen";
 import { BrewingScreen } from "./BrewingScreen";
 import { ResultScreen } from "./ResultScreen";
 import styles from "./DiagnosisApp.module.css";
@@ -20,8 +24,11 @@ export function DiagnosisApp() {
     () => parseInviter(searchParams.toString()),
     [searchParams],
   );
+  // 仕様6: ?mode=before-order のときだけ食事提案も許可。既定は "table"（甘味・ドリンク中心）。
+  const modeParam = searchParams.get("mode");
+  const mode = isRecommendationMode(modeParam) ? modeParam : "table";
 
-  const flow = useDiagnosisFlow();
+  const flow = useDiagnosisFlow(mode);
   const { stage, actions } = flow;
 
   return (
@@ -32,7 +39,11 @@ export function DiagnosisApp() {
 
         <div className={styles.stageArea}>
           {stage === "intro" && (
-            <IntroScreen inviter={inviter} onStart={actions.start} />
+            <IntroScreen
+              inviter={inviter}
+              onStart={() => actions.start("auto")}
+              onStartWithKids={() => actions.start("parent-child")}
+            />
           )}
 
           {stage === "quiz" && (
@@ -52,20 +63,27 @@ export function DiagnosisApp() {
             />
           )}
 
+          {stage === "kids-gate" && (
+            <KidsGateScreen onAccept={actions.acceptKidsGate} onDecline={actions.declineKidsGate} />
+          )}
+
+          {stage === "kids-question" && <KidsQuestionScreen onChoose={actions.chooseKids} />}
+
+          {stage === "kids-reveal" && (
+            <KidsRevealScreen choiceId={flow.kidsChoiceId} onSkip={actions.skipKidsReveal} />
+          )}
+
           {stage === "brewing" && <BrewingScreen />}
 
-          {stage === "result" && flow.result && flow.text && (
+          {stage === "result" && flow.result && flow.text && flow.recommendation && (
             <ResultScreen
               result={flow.result}
               text={flow.text}
               textSource={flow.textSource}
               answers={flow.answers}
+              recommendation={flow.recommendation}
+              kidsChoiceId={flow.kidsChoiceId}
               inviter={inviter}
-              kids={flow.kids}
-              onOpenKids={actions.openKids}
-              onDeclineKids={actions.declineKids}
-              onResetKidsChoice={actions.resetKidsChoice}
-              onChooseKids={actions.chooseKids}
               onRestart={actions.restart}
             />
           )}

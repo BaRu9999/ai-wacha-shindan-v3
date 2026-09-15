@@ -9,8 +9,8 @@
 .leaf {
   position: absolute;
   top: -8%;
+  color: var(--green);
   opacity: 0;
-  filter: grayscale(0.2);
   animation-name: drift;
   animation-timing-function: linear;
   animation-iteration-count: infinite;

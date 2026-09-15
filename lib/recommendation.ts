@@ -14,7 +14,21 @@ import {
  *    どうなりたいか(Q6)・子ども向けの回答 で、同じタイプでも結果が変わる余地を作る。
  *  - 機械学習は使わない。すべて説明可能なルール。
  *  - 停止中(status:"inactive")の商品は出さない。全滅時は signature に退避する。
+ *
+ * 方針（仕様6・mode）:
+ *  - このサービスは卓上利用（注文後・食事中）が中心のため、既定の "table" モードでは
+ *    食事系（category: "plate"）の商品を提案しない。「追加注文として自然か」を基準に、
+ *    甘味・ドリンクを優先する。
+ *  - 注文前の利用など、食事提案も出したい場面のために "before-order" モードを用意する。
+ *    既定は必ず "table"（URL の ?mode=before-order 等、呼び出し側が明示したときだけ切り替える）。
+ *  - 実装は単純なフィルタ（plate を含む組み合わせを候補から外す）のみ。大規模な条件分岐は増やさない。
  */
+
+export type RecommendationMode = "table" | "before-order";
+
+export function isRecommendationMode(value: unknown): value is RecommendationMode {
+  return value === "table" || value === "before-order";
+}
 
 export type RecommendationSignals = {
   /** Q4 味覚 */
@@ -138,7 +152,19 @@ const signatureByType: Record<TeaKey, string> = {
   rooibos: "rooibos-signature",
 };
 
-export function chooseSetId(teaKey: TeaKey, signals: RecommendationSignals): string {
+/** mode="table" のとき、食事系（plate）を含む組み合わせを候補から外す。 */
+function isSetAllowedInMode(setId: string, mode: RecommendationMode): boolean {
+  if (mode === "before-order") return true;
+  const set = productSets[setId];
+  if (!set) return false;
+  return set.items.every((itemId) => products[itemId]?.category !== "plate");
+}
+
+export function chooseSetId(
+  teaKey: TeaKey,
+  signals: RecommendationSignals,
+  mode: RecommendationMode = "table",
+): string {
   const scores = leanScores(signals);
   const plan = setPlanByType[teaKey];
   const ordered = (Object.keys(LEAN_TIEBREAK) as Lean[])
@@ -147,7 +173,7 @@ export function chooseSetId(teaKey: TeaKey, signals: RecommendationSignals): str
 
   for (const lean of ordered) {
     const setId = plan[lean];
-    if (setId && productSets[setId]) return setId;
+    if (setId && productSets[setId] && isSetAllowedInMode(setId, mode)) return setId;
   }
   return signatureByType[teaKey];
 }
@@ -176,9 +202,10 @@ export function recommend(
   teaKey: TeaKey,
   answers: Answer[],
   kids: KidsChoiceId | null = null,
+  mode: RecommendationMode = "table",
 ): Recommendation {
   const signals = deriveSignals(answers, kids);
-  let setId = chooseSetId(teaKey, signals);
+  let setId = chooseSetId(teaKey, signals, mode);
   let items = activeItems(setId);
 
   if (items.length === 0 && setId !== signatureByType[teaKey]) {

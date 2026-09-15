@@ -117,10 +117,26 @@ describe("同じタイプでも回答で提案が変わる", () => {
   });
 });
 
-describe("価格非掲載の商品（タニタコラボプレート）", () => {
-  it("price が null の商品を含むときは hasUnpricedItem が true になり、合計には含めない", () => {
-    const plateAnswer = answersFrom({ q1: "q1d", q4: "q4c", q5: "q5b", q6: "q6c" });
+describe("商品提案モード（仕様6: 既定は卓上利用向けの table、食事は before-order のみ）", () => {
+  const plateAnswer = answersFrom({ q1: "q1d", q4: "q4c", q5: "q5b", q6: "q6c" });
+
+  it("既定（table）では、食事系（plate）の商品を提案しない", () => {
+    for (const key of TEA_KEYS) {
+      for (const scenario of scenarios) {
+        const rec = recommend(key, scenario.answers, scenario.kids);
+        expect(
+          rec.items.every((item) => item.category !== "plate"),
+          `${key} / ${scenario.name}: ${rec.setId}`,
+        ).toBe(true);
+      }
+    }
+    // 「軽さ・整えに寄せる」回答は before-order なら plate に解決されるが、table では避ける。
     const rec = recommend("kuwacha", plateAnswer, null);
+    expect(rec.setId).not.toBe("kuwacha-plate");
+  });
+
+  it("before-order を明示したときだけ、price が null の商品（タニタコラボプレート）を含む提案に解決される", () => {
+    const rec = recommend("kuwacha", plateAnswer, null, "before-order");
     expect(rec.setId).toBe("kuwacha-plate");
 
     const plateItem = rec.items.find((item) => item.id === "tanita-plate-sawara");

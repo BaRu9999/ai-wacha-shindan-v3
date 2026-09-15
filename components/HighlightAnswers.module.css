@@ -1,0 +1,42 @@
+.block {
+  padding: 16px 20px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--washi);
+}
+
+.label {
+  margin: 0 0 10px;
+  color: var(--sumi-3);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: center;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list li {
+  position: relative;
+  padding-left: 16px;
+  color: var(--sumi-2);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.list li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.7em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+}

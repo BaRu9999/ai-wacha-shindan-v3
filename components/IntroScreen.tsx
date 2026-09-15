@@ -7,13 +7,14 @@ import styles from "./IntroScreen.module.css";
 type Props = {
   inviter: { from: TeaKey | null; hidden: TeaKey | null };
   onStart: () => void;
+  onStartWithKids: () => void;
 };
 
-export function IntroScreen({ inviter, onStart }: Props) {
+export function IntroScreen({ inviter, onStart, onStartWithKids }: Props) {
   const invited = inviter.from !== null;
 
   return (
-    <div className={styles.screen}>
+    <div className={styles.screen} data-testid="intro-screen">
       <p className={styles.eyebrow}>6つの質問でわかる</p>
       <h1 className={styles.title}>
         今日のあなたは、
@@ -48,6 +49,13 @@ export function IntroScreen({ inviter, onStart }: Props) {
       <button type="button" className={styles.start} onClick={onStart}>
         診断をはじめる
       </button>
+
+      <p className={styles.kidsEntry}>
+        お子さまと一緒の方は
+        <button type="button" className={styles.kidsEntryButton} onClick={onStartWithKids}>
+          親子で楽しむ
+        </button>
+      </p>
 
       <dl className={styles.meta}>
         <div>

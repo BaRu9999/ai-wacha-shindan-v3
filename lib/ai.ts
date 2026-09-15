@@ -6,7 +6,11 @@ import type {
   TeaKey,
 } from "@/types";
 import { diagnose } from "./diagnosis";
-import { recommend, recommendationProductNames } from "./recommendation";
+import {
+  recommend,
+  recommendationProductNames,
+  type RecommendationMode,
+} from "./recommendation";
 import { buildFallbackText } from "./fallback";
 import { extractOpenAIContent, parseDiagnosisText } from "./ai-schema";
 import {
@@ -25,7 +29,8 @@ import { kidsChoiceById } from "@/data/kids-question";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const DEFAULT_MODEL = "gpt-5-mini";
 const DEFAULT_TIMEOUT_MS = 8_000;
-const MAX_COMPLETION_TOKENS = 500;
+// 仕様14: 文章はさらに短く（summary最大2文/today1文/他1〜2文）。トークン枠も合わせて絞る。
+const MAX_COMPLETION_TOKENS = 320;
 
 export type GenerateOptions = {
   fetchImpl?: typeof fetch;
@@ -37,6 +42,8 @@ export type GenerateOptions = {
 export type GenerateInput = {
   answers: Answer[];
   kidsChoiceId: KidsChoiceId | null;
+  /** 表示側と同じ商品提案になるよう、仕様6の mode を必ず揃えて渡す（既定 "table"）。 */
+  mode?: RecommendationMode;
 };
 
 export type GenerateOutput = {
@@ -50,9 +57,9 @@ export async function generateDiagnosisText(
   input: GenerateInput,
   options: GenerateOptions = {},
 ): Promise<GenerateOutput> {
-  const { answers, kidsChoiceId } = input;
+  const { answers, kidsChoiceId, mode = "table" } = input;
   const { main, hidden } = diagnose(answers);
-  const recommendation = recommend(main, answers, kidsChoiceId);
+  const recommendation = recommend(main, answers, kidsChoiceId, mode);
   const productNames = recommendationProductNames(recommendation);
   const fallback = buildFallbackText(main, hidden, answers, recommendation.reason);
   const base: GenerateOutput = {

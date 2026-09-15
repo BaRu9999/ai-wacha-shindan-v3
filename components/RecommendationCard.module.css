@@ -1,14 +1,10 @@
 .card {
+  position: relative;
   overflow: hidden;
   border: 1px solid var(--rule);
   border-radius: var(--radius-lg);
   background: var(--paper);
   box-shadow: var(--shadow-card);
-  transition: box-shadow 0.2s ease;
-}
-
-.staffMode {
-  box-shadow: 0 0 0 2px var(--green), var(--shadow-card);
 }
 
 .image {
@@ -61,94 +57,101 @@
   font-weight: 700;
 }
 
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px dashed var(--rule-strong);
+  color: var(--sumi-3);
+  font-size: 11px;
+}
+
+.price strong {
+  color: var(--sumi);
+  font-size: 18px;
+  font-family: var(--font-serif);
+}
+
+.price span {
+  font-size: 10px;
+}
+
 .actions {
+  display: grid;
+  gap: 8px;
   margin-top: 16px;
 }
 
-.menuButton {
+.detailButton,
+.staffButton {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
   min-height: 48px;
-  border: 1px solid var(--rule-strong);
   border-radius: var(--radius);
-  background: transparent;
-  color: var(--green-deep);
   font-size: 13.5px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   cursor: pointer;
 }
 
-.menuButton:hover {
+.detailButton {
+  border: 1px solid var(--rule-strong);
+  background: transparent;
+  color: var(--green-deep);
+}
+
+.detailButton:hover {
   background: var(--green-tint);
 }
 
-.menuDetail {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px dashed var(--rule-strong);
-  animation: open 0.25s ease both;
+.staffButton {
+  border: 1px solid var(--green);
+  background: var(--green-tint);
+  color: var(--green-deep);
+}
+
+.staffButton:hover {
+  background: var(--green);
+  color: var(--paper);
 }
 
 .menuList {
   display: grid;
-  gap: 8px;
-  margin: 0 0 10px;
-  padding: 0;
+  gap: 12px;
+  margin: 14px 0 0;
+  padding-top: 14px;
+  border-top: 1px dashed var(--rule-strong);
   list-style: none;
+  animation: open 0.25s ease both;
 }
 
-.menuList li {
+.menuHead {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: baseline;
   gap: 4px 14px;
-  color: var(--sumi-2);
+  color: var(--sumi);
   font-size: 13px;
+  font-weight: 700;
   line-height: 1.6;
 }
 
-.menuList li span:last-child {
+.menuHead span:last-child {
   text-align: right;
   color: var(--sumi-3);
-  font-size: 12px;
+  font-size: 11.5px;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
-.total {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin: 0 0 14px;
-  padding-top: 8px;
-  border-top: 1px solid var(--rule);
-  color: var(--sumi-3);
-  font-size: 11px;
-}
-
-.total strong {
-  color: var(--sumi);
-  font-size: 15px;
-}
-
-.staffButton {
-  width: 100%;
-  min-height: 46px;
-  border: 1px solid var(--green);
-  border-radius: var(--radius);
-  background: var(--green-tint);
-  color: var(--green-deep);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.staffHint {
-  margin-top: 10px;
-  text-align: center;
-  color: var(--green-deep);
+.menuReason {
+  margin: 4px 0 0;
+  color: var(--sumi-2);
   font-size: 12px;
   line-height: 1.7;
 }

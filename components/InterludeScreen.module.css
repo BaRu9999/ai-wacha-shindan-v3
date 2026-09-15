@@ -17,9 +17,14 @@
 
 .cup {
   position: relative;
-  font-size: 54px;
-  line-height: 1;
+  display: inline-flex;
   animation: float 2.6s ease-in-out infinite;
+}
+
+.cupIcon {
+  width: 54px;
+  height: 54px;
+  color: var(--green-deep);
 }
 
 .steam {

@@ -13,6 +13,9 @@
 - 店舗卓上の QR コードから開き、6問の質問にタップだけで回答（目標30〜45秒）。
 - メインタイプ＋隠れタイプを判定し、AI が「短い性格要約・今日のひとこと・和ことば」などを生成。
 - 診断結果に応じて、同じタイプでもおすすめメニューが変わる（味覚・気分の回答を反映）。
+- 結果画面には「今回のあなたをつくった3つの選択」を添え、結果への納得感を作る（§16）。
+- おすすめは商品名・理由・価格まで最初から表示し、「スタッフに注文画面を見せる」までを1タップで（§5相当・§15）。
+- 子ども連れのときは、結果を作る前に「最後の一問」を子どもに聞き、回答を反映してから結果を表示する（§14）。
 - 結果はカード画像として保存・LINE/Web Share で共有でき、友達同士の和茶相性も見られる。
 - 個人情報は一切保存しない。改善用の匿名イベントログのみ Supabase に記録できる。
 - OpenAI が使えない／失敗しても、診断・結果表示は止まらない（フォールバック文を用意）。
@@ -25,22 +28,24 @@
 | スタイル | CSS Modules ＋ `app/globals.css`（トークン・リセット）。UI ライブラリは使わない |
 | AI | OpenAI Chat Completions を `fetch` で直接呼び出し（SDK 未使用・依存を増やさない方針） |
 | データ保存 | Supabase（匿名イベントログ用）。PostgREST に直接 `fetch` で INSERT（`@supabase/supabase-js` 未使用） |
-| テスト | Vitest（`test/**/*.test.ts`、node 環境） |
+| 演出 | CSS アニメーション ＋ 独自の線画 SVG（湯呑み・茶葉・きらめきなど）。絵文字・外部素材は使わない |
+| テスト | Vitest（`test/**/*.test.ts`、node 環境）／ Playwright（`e2e/**/*.spec.ts`、最低限の E2E） |
 | その他 dev 依存 | `tsx`（配点分布レポートの実行用） |
 
 ディレクトリ構成:
 
 ```
 app/            画面・API ルート（App Router）
-components/     画面部品（*.tsx + 対の *.module.css）
+components/     画面部品（*.tsx + 対の *.module.css）。icons.tsx は独自SVGアイコン集
 hooks/          クライアント状態（診断フローの状態機械、reduced-motion）
-lib/            純粋ロジック（診断・推薦・AI呼び出し・検証・共有・分析ログ）
+lib/            純粋ロジック（診断・推薦・3つの選択抽出・AI呼び出し・検証・共有・分析ログ）
 data/           差し替え前提のマスタデータ（質問・タイプ・商品・相性・店舗名）
 types/          ドメイン型の単一の真実
-test/           Vitest テスト
+test/           Vitest テスト（ロジック）
+e2e/            Playwright テスト（通常フロー／親子フローの一気通貫確認）
 scripts/        配点分布レポート（npm run distribution）
 supabase/       匿名ログ用テーブルの SQL
-public/menu/    タイプ別のメニュー写真（差し替え可能）
+public/menu/    タイプ別のメニュー写真（差し替え可能。今回の更新では未変更）
 ```
 
 依存の向き: `types` ← `data` ← `lib` ← `hooks` / `app/api` ← `components` ← `app/page.tsx`。
@@ -100,6 +105,10 @@ env は import 時ではなく **使用時に読む**設計のため、未設定
 渡すことはありません。** タイプ判定そのものは AI に行わせず、`lib/diagnosis.ts` の
 ルールベースロジックで確定した結果に、AI が短い文章を肉付けするだけです（詳細は §10）。
 
+AI が主役にならないよう、項目ごとに文数の上限を決めています（`summary` 最大2文／`today` 1文／
+`hiddenInsight`・`recommendationReason` 1〜2文。`lib/ai-prompts.ts`）。フォールバック文
+（`lib/fallback.ts` / `data/fallback-text.ts`）も同じ長さ感で統一しています。
+
 ## 7. Vercelデプロイ方法
 
 1. このリポジトリを GitHub にプッシュする。
@@ -133,7 +142,10 @@ env は import 時ではなく **使用時に読む**設計のため、未設定
 - 「今日のおすすめ」は `productSets`（同ファイル内）で商品を1〜2点組み合わせたもの
   （単品ドリンクのみの組み合わせも可）。新しい組み合わせを増やしたら、`lib/recommendation.ts` の
   `setPlanByType` に、どの「傾向（甘め・軽め・ドリンク中心）」で使うかを追記してください。
+- `category: "plate"`（食事）の商品は、既定の `mode: "table"`（卓上・追加注文中心）では
+  提案されません。食事提案を含めたいときだけ `?mode=before-order` を使ってください（§15）。
 - 写真は `public/menu/` に追加し、`data/products.ts` の `image` を差し替えます（`next/image` が自動最適化）。
+  今回の更新では商品写真そのものは変更していません（差し替えは別途）。
 
 > 商品名・価格は2026-09に実店舗のメニュー（祇園茶寮側・タニタカフェ側）から書き起こし、
 > 店舗確認済みです。メニュー改定時は写真を見ながら `data/products.ts` を直接更新してください。
@@ -153,7 +165,11 @@ q("q1a", "静かに、自分のペースで過ごす", "matcha", "biwa"),
   文言だけ変える分には問題ありませんが、`main`/`sub` の組み合わせを変える場合は
   必ず `npm run distribution` で偏りを確認してください（§11）。
 - 子ども向けの質問は `data/kids-question.ts`、途中のリアクション文は
-  `data/questions.ts` の `interludes` にあります。
+  `data/questions.ts` の `interludes` にあります。アイコンは絵文字ではなく
+  `components/icons.tsx` の独自SVG（`data/kids-question.ts` の `id` から対応付け）。
+- Q1 のみ「行動シナリオ型」（予定が急に空いたらどうする、という具体的な分岐）に変更済みです。
+  `main`/`sub` は変えていないため配点への影響はありません。他の質問を同様に書き換える場合も、
+  `main`/`sub` を変えない限り再確認は不要ですが、変える場合は必ず §11 を実行してください。
 
 ## 10. 診断ロジックの説明
 
@@ -210,9 +226,15 @@ npm run distribution
 - 送信はベストエフォート（`sendBeacon` → 不可なら `keepalive fetch`）。失敗しても診断・表示は
   止まりません。Supabase の環境変数が無ければ何もせず 204 を返します。
 - 取得イベント: `diagnosis_start` / `question_answered` / `diagnosis_complete` /
-  `recommendation_view` / `product_detail_tap` / `staff_show_tap` / `result_detail_expand` /
-  `result_save` / `line_share` / `share_other` / `compatibility_start` / `kids_mode_used`。
+  `recommendation_view` / `product_detail_tap` / `staff_show_tap` / `order_screen_view` /
+  `result_detail_expand` / `result_save` / `line_share` / `share_other` / `compatibility_start` /
+  `kids_mode_selected`（TOPで「親子で楽しむ」を選択） / `kids_question_answered`（子どもが回答） /
+  `recommendation_changed_by_kids`（子どもの回答でおすすめが変わったとき） /
+  `diagnosis_reason_view`（「今回のあなたをつくった3つの選択」を表示） / `kids_mode_used`（互換のため型は残置。現在は発火しない）。
 - テーブル定義・RLS（匿名キーは INSERT のみ）・集計 SQL サンプルは `supabase/schema.sql`。
+- **重要**: `staff_show_tap` / `order_screen_view` は「スタッフに注文画面を見せた」という
+  **注文意向に近い行動**を示すだけで、実際に注文・購入したかどうかはわかりません。
+  分析・レポートのどこであっても「注文数」「購入数」として扱わないでください。
 
 ## 13. 相性診断の仕組み
 
@@ -223,14 +245,88 @@ npm run distribution
   `data/compatibility.ts` の相性テーブルに掛け合わせ、相性スコア・コメントを表示します
   （`components/CompatibilityPanel.tsx`）。診断履歴やユーザーIDの保存は行いません。
 
+## 14. 子どもモード（親子で楽しむ）の流れ
+
+結果を作る前に、子ども連れの分岐を必ず確定させます（結果表示後にこっそり商品が変わることはありません）。
+
+```
+6問診断完了
+  ├─ TOPで「親子で楽しむ」を選んでいた場合
+  │     └─ そのまま「最後の一問は、お子さまに。」へ
+  └─ 通常モードの場合
+        └─「今日はお子さまとご一緒ですか？」
+              ├─ いいえ → そのまま結果を生成
+              └─ はい   → 「最後の一問は、お子さまに。」へ
+                             ├─ 3択（甘いごほうび／ほっとひと息／ちょっと特別）
+                             ├─ 短い演出（「◯◯を選んでくれました。」）
+                             └─ 子どもの回答を含めて、結果・おすすめを生成
+```
+
+- 状態機械は `hooks/useDiagnosisFlow.ts`。画面は `components/KidsGateScreen.tsx`
+  （はい/いいえ）・`KidsQuestionScreen.tsx`（3択）・`KidsRevealScreen.tsx`（短い演出）。
+- 結果画面には「お子さまが選んだ今日のごほうび」を静的に表示するだけで、選び直しの導線は
+  持ちません（もう一度試したい場合は「もう一度診断する」から）。
+- 「ママ」に限定せず「おうちの人」という言い回しを基本にしています（`data/kids-question.ts`）。
+
+## 15. 商品推薦モード（table / before-order）
+
+このサービスは卓上・食事中の利用が中心のため、既定では食事系（`category: "plate"`）の
+商品を提案しません。「追加注文として自然か」を基準に、甘味・ドリンクを優先します。
+
+| mode | 用途 | 食事系(plate)商品 |
+| --- | --- | --- |
+| `table`（既定） | 卓上・注文後の追加おすすめ | 提案しない |
+| `before-order` | 注文前の利用など | 提案してよい |
+
+- URL クエリ `?mode=before-order` で切り替えます（`components/DiagnosisApp.tsx` が
+  `useSearchParams` から読み取り、`hooks/useDiagnosisFlow.ts` → `lib/recommendation.ts`
+  → `/api/diagnose` まで一貫して同じ mode を使うため、画面の表示と AI の文章がずれません）。
+- 実装は単純なフィルタです（`lib/recommendation.ts` の `isSetAllowedInMode`）。plate を含む
+  組み合わせを候補から外すだけで、スコアリング自体は変えていません。
+
+## 16. 「今回のあなたをつくった3つの選択」
+
+結果への納得感を上げるため、ファーストビューにタイプ判定の根拠を3つ添えます（AIには選ばせません）。
+
+- `lib/highlights.ts` の `pickHighlights(main, answers, 3)` が、メインタイプの `main`/`sub` に
+  実際に加点した回答の中から、質問の theme（性格・今日の気分・味覚・過ごし方）が
+  できるだけ重ならないよう3つを選びます。完全に決定論で、同じ回答なら常に同じ3つになります。
+- 表示は `components/HighlightAnswers.tsx`。表示された時点で `diagnosis_reason_view` を記録します。
+
+## 17. 結果カードについて（記念カード）
+
+`components/TeaResultCard.tsx` が生成する結果カードは、診断結果のスクリーンショットではなく
+「祇園茶寮で体験した記念カード」に寄せています。載せるのは、タイプ名・キャッチコピー・
+今日の和ことば・小さく添えた商品名・店舗名・当日の日付（JST、`2026.09.15` 形式）のみで、
+隠れタイプや詳しい分析は載せません。サイズは 1080×1350 のまま。日付は個人情報ではないため
+保存・共有して問題ありません。
+
+## 18. E2Eテスト（Playwright）
+
+`e2e/` に、スマートフォン相当のビューポート（390×844・375×667）で通しの動作を確認する
+最低限のテストがあります。OpenAI・Supabase の環境変数を与えなくても
+（フォールバック文・ログ無送信で）完結します。
+
+```bash
+npx playwright install chromium   # 初回のみ（ブラウザ本体の取得）
+npm run test:e2e
+```
+
+- `e2e/normal-flow.spec.ts`: TOP → 診断開始 → 6問 → 待機演出 → 「いいえ」 → 結果 →
+  おすすめ表示 → 注文画面を開く → 閉じる。TOPに「親子で楽しむ」導線があることも確認。
+- `e2e/parent-child-flow.spec.ts`: TOP → 親子モード → 6問 → 子ども向け質問 → 子どもが回答 →
+  結果に「お子さまが選んだ今日のごほうび」が反映されていること → おすすめ表示。
+- `playwright.config.ts` が `npm run dev` を自動起動します（既に起動中ならそれを使い回します）。
+
 ## テスト・ビルドコマンド
 
 ```bash
 npm run typecheck   # tsc --noEmit
 npm run lint        # ESLint（next/core-web-vitals + next/typescript）
-npm test            # vitest run
+npm test            # vitest run（診断・推薦・タイブレーク・3つの選択・AI検証・フォールバック）
 npm run build        # 本番ビルド（型チェック込み）
 npm run distribution # 配点分布レポート
+npm run test:e2e     # Playwright（通常フロー／親子フローの一気通貫確認。§18）
 ```
 
 ## 注意

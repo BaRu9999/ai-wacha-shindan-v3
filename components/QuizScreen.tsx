@@ -20,7 +20,7 @@ export function QuizScreen({
   onChoose,
 }: Props) {
   return (
-    <div className={styles.screen} key={question.id}>
+    <div className={styles.screen} key={question.id} data-testid="quiz-screen">
       <div className={styles.head}>
         <TeaProgress ratio={progress} current={questionNumber} total={total} />
       </div>

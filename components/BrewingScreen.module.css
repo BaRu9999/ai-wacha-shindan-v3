@@ -23,8 +23,9 @@
 .cup {
   position: relative;
   z-index: 2;
-  font-size: 60px;
-  line-height: 1;
+  width: 60px;
+  height: 60px;
+  color: var(--green-deep);
   animation: float 2.6s ease-in-out infinite;
 }
 

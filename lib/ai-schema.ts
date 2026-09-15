@@ -5,9 +5,12 @@ import { DIAGNOSIS_TEXT_KEYS } from "@/types";
  * AI 応答（結果文）の検証。zod は使わず手書き（依存を増やさない方針）。
  * - 想定外の形／空文字／極端に長い文字列は弾く。
  * - 通ったものは前後空白と連続空白を軽く整形する。
+ *
+ * 仕様14: 文章は短く保つ方針のため、上限も余裕を持たせつつ短めに設定する
+ *   （日本語1〜2文なら通常 100字前後。200字あれば十分で、長すぎる応答は弾いてフォールバックへ回す）。
  */
 
-const MAX_FIELD_LENGTH = 400;
+const MAX_FIELD_LENGTH = 200;
 
 export function isDiagnosisText(value: unknown): value is DiagnosisText {
   if (!value || typeof value !== "object") return false;

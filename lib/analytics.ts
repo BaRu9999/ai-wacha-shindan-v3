@@ -4,6 +4,10 @@
  * 個人情報は一切扱わない。保存するのは「セッション単位のランダムID」＋イベント名＋
  * タイプ／商品ID／小さな meta のみ（仕様20）。
  * 送信はベストエフォート（sendBeacon or keepalive fetch）で、失敗しても UI に影響させない。
+ *
+ * 重要（仕様16）: `staff_show_tap` / `order_screen_view` は
+ * 「スタッフに画面を見せた（＝注文意向に近い行動）」を表すだけで、実際に注文・購入したかは
+ * わからない。コード・分析・レポートのどこであっても「注文数」「購入数」として扱わないこと。
  */
 
 export type AnalyticsEvent =
@@ -14,12 +18,17 @@ export type AnalyticsEvent =
   | "product_detail_tap"
   | "menu_view_tap"
   | "staff_show_tap"
+  | "order_screen_view"
   | "result_detail_expand"
   | "result_save"
   | "line_share"
   | "share_other"
   | "compatibility_start"
-  | "kids_mode_used";
+  | "kids_mode_used"
+  | "kids_mode_selected"
+  | "kids_question_answered"
+  | "recommendation_changed_by_kids"
+  | "diagnosis_reason_view";
 
 export type AnalyticsPayload = {
   teaType?: string | null;

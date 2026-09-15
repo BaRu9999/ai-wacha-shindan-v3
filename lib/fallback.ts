@@ -17,18 +17,16 @@ export function buildFallbackText(
   const seed = fallbackSeeds[main];
   const hiddenName = teaTypes[hidden].name;
 
-  const q1Label = labelFor(answers, "q1");
-  const q6Label = labelFor(answers, "q6");
-
-  const todaySentences: string[] = [];
-  if (q1Label) todaySentences.push(`いまは「${q1Label}」に、気持ちが向いているようです。`);
-  if (q6Label) todaySentences.push(`「${q6Label}」——そんな時間になりますように。`);
+  // today は仕様14により必ず1文。Q6（どうなりたいか）を優先し、無ければ Q1 で補う。
+  const todayLabel = labelFor(answers, "q6") ?? labelFor(answers, "q1");
+  const today = todayLabel
+    ? `今日は、「${todayLabel}」——そんな時間になりますように。`
+    : "今日の一杯が、いい区切りになりますように。";
 
   return {
     summary: seed.summary,
     hiddenInsight: seed.hiddenInsight.replace("${hidden}", hiddenName),
-    today:
-      todaySentences.join("") || "今日の一杯が、いい区切りになりますように。",
+    today,
     recommendationReason: recommendationReason || teaTypes[main].catchphrase,
     word: seed.word,
     wordMeaning: seed.wordMeaning,

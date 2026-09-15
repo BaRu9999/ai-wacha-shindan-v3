@@ -1,0 +1,67 @@
+.screen {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding: 44px 30px;
+  text-align: center;
+  animation: fade 0.4s ease both;
+}
+
+.title {
+  max-width: 22em;
+  color: var(--sumi);
+  font-family: var(--font-serif);
+  font-size: 20px;
+  line-height: 1.8;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.yes,
+.no {
+  flex: 1;
+  min-height: 52px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.yes {
+  border: 0;
+  background: var(--green);
+  color: var(--paper);
+}
+
+.yes:hover {
+  background: var(--green-deep);
+}
+
+.no {
+  border: 1px solid var(--rule-strong);
+  background: transparent;
+  color: var(--sumi-2);
+}
+
+.no:hover {
+  background: var(--washi);
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
