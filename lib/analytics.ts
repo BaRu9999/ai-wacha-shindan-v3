@@ -5,9 +5,16 @@
  * タイプ／商品ID／小さな meta のみ（仕様20）。
  * 送信はベストエフォート（sendBeacon or keepalive fetch）で、失敗しても UI に影響させない。
  *
- * 重要（仕様16）: `staff_show_tap` / `order_screen_view` は
- * 「スタッフに画面を見せた（＝注文意向に近い行動）」を表すだけで、実際に注文・購入したかは
- * わからない。コード・分析・レポートのどこであっても「注文数」「購入数」として扱わないこと。
+ * 重要: `order_cta_tap` / `order_screen_view`（旧 `staff_show_tap`）は
+ * 「スタッフに注文画面を見せようとした／見せた（＝注文意向に近い行動）」を表すだけで、
+ * 実際に注文・購入したかはわからない。コード・分析・レポートのどこであっても
+ * 「注文数」「購入数」「注文完了」「購入完了」として扱わないこと。実売上は POS 側で確認する。
+ *
+ * 注文まわりのイベントは2段階に分けている:
+ *   1. `order_cta_tap`      … 「スタッフに注文画面を見せる」ボタンを押した瞬間
+ *   2. `order_screen_view`  … 注文画面（モーダル）が実際に表示された瞬間
+ * `staff_show_tap` は初期実装の名残。後方互換のため型には残すが、新規には発火しない
+ * （既存の集計クエリを壊さないためだけに残置。新しい分析は 1. 2. を使うこと）。
  */
 
 export type AnalyticsEvent =
@@ -18,6 +25,7 @@ export type AnalyticsEvent =
   | "product_detail_tap"
   | "menu_view_tap"
   | "staff_show_tap"
+  | "order_cta_tap"
   | "order_screen_view"
   | "result_detail_expand"
   | "result_save"

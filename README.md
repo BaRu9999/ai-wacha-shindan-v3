@@ -13,7 +13,7 @@
 - 店舗卓上の QR コードから開き、6問の質問にタップだけで回答（目標30〜45秒）。
 - メインタイプ＋隠れタイプを判定し、AI が「短い性格要約・今日のひとこと・和ことば」などを生成。
 - 診断結果に応じて、同じタイプでもおすすめメニューが変わる（味覚・気分の回答を反映）。
-- 結果画面には「今回のあなたをつくった3つの選択」を添え、結果への納得感を作る（§16）。
+- 結果画面には「この結果につながった選択」を添え、結果への納得感を作る（§16）。
 - おすすめは商品名・理由・価格まで最初から表示し、「スタッフに注文画面を見せる」までを1タップで（§5相当・§15）。
 - 子ども連れのときは、結果を作る前に「最後の一問」を子どもに聞き、回答を反映してから結果を表示する（§14）。
 - 結果はカード画像として保存・LINE/Web Share で共有でき、友達同士の和茶相性も見られる。
@@ -38,7 +38,7 @@
 app/            画面・API ルート（App Router）
 components/     画面部品（*.tsx + 対の *.module.css）。icons.tsx は独自SVGアイコン集
 hooks/          クライアント状態（診断フローの状態機械、reduced-motion）
-lib/            純粋ロジック（診断・推薦・3つの選択抽出・AI呼び出し・検証・共有・分析ログ）
+lib/            純粋ロジック（診断・推薦・価格表示・結果の選択抽出・AI呼び出し・検証・共有・分析ログ）
 data/           差し替え前提のマスタデータ（質問・タイプ・商品・相性・店舗名）
 types/          ドメイン型の単一の真実
 test/           Vitest テスト（ロジック）
@@ -155,8 +155,8 @@ AI が主役にならないよう、項目ごとに文数の上限を決めて�
 質問は `data/questions.ts` に集約しています。6問 × 4択の構造です。
 
 ```ts
-q("q1a", "静かに、自分のペースで過ごす", "matcha", "biwa"),
-//  ID     表示ラベル                    main      sub
+q("q1a", "家で静かに、好きなことをして過ごす", "matcha", "biwa"),
+//  ID     表示ラベル                          main      sub
 ```
 
 - `main`（+2点）・`sub`（+1点）は、必ず異なるタイプを指定してください。
@@ -170,6 +170,11 @@ q("q1a", "静かに、自分のペースで過ごす", "matcha", "biwa"),
 - Q1 のみ「行動シナリオ型」（予定が急に空いたらどうする、という具体的な分岐）に変更済みです。
   `main`/`sub` は変えていないため配点への影響はありません。他の質問を同様に書き換える場合も、
   `main`/`sub` を変えない限り再確認は不要ですが、変える場合は必ず §11 を実行してください。
+- q1d「そのときの気分で、決める」は、`lib/recommendation.ts` の商品推薦シグナルでは
+  `moodStart: "flexible"` として扱います（以前の `"clearHead"` は文言と意味が合っていなかったため
+  廃止）。「決めない」という回答から商品の傾向を勝手に決めつけないよう、`flexible` は
+  sweet/light/drink のどれにも加点しません。診断タイプ判定側（`data/questions.ts` の
+  `main`/`sub`）は変更していません。
 
 ## 10. 診断ロジックの説明
 
@@ -226,15 +231,20 @@ npm run distribution
 - 送信はベストエフォート（`sendBeacon` → 不可なら `keepalive fetch`）。失敗しても診断・表示は
   止まりません。Supabase の環境変数が無ければ何もせず 204 を返します。
 - 取得イベント: `diagnosis_start` / `question_answered` / `diagnosis_complete` /
-  `recommendation_view` / `product_detail_tap` / `staff_show_tap` / `order_screen_view` /
+  `recommendation_view` / `product_detail_tap` / `order_cta_tap`（「スタッフに注文画面を見せる」を
+  押した瞬間） / `order_screen_view`（注文画面が実際に表示された瞬間） /
   `result_detail_expand` / `result_save` / `line_share` / `share_other` / `compatibility_start` /
   `kids_mode_selected`（TOPで「親子で楽しむ」を選択） / `kids_question_answered`（子どもが回答） /
   `recommendation_changed_by_kids`（子どもの回答でおすすめが変わったとき） /
-  `diagnosis_reason_view`（「今回のあなたをつくった3つの選択」を表示） / `kids_mode_used`（互換のため型は残置。現在は発火しない）。
+  `diagnosis_reason_view`（「この結果につながった選択」を表示） /
+  `staff_show_tap`（初期実装の名残。型には残すが新規には発火しない） /
+  `kids_mode_used`（同上・互換のため型のみ残置）。
 - テーブル定義・RLS（匿名キーは INSERT のみ）・集計 SQL サンプルは `supabase/schema.sql`。
-- **重要**: `staff_show_tap` / `order_screen_view` は「スタッフに注文画面を見せた」という
-  **注文意向に近い行動**を示すだけで、実際に注文・購入したかどうかはわかりません。
-  分析・レポートのどこであっても「注文数」「購入数」として扱わないでください。
+- **重要**: `order_cta_tap` / `order_screen_view`（旧 `staff_show_tap`）は
+  「スタッフに注文画面を見せようとした／見せた」という**注文意向に近い行動**を示すだけで、
+  実際に注文・購入・決済されたかどうかはわかりません。分析・レポート・店舗説明のどこであっても
+  「注文数」「購入数」「注文完了」「購入完了」として扱わないでください。実売上・実注文数は
+  POS 側のデータで確認してください（§19）。
 
 ## 13. 相性診断の仕組み
 
@@ -268,6 +278,11 @@ npm run distribution
   持ちません（もう一度試したい場合は「もう一度診断する」から）。
 - 「ママ」に限定せず「おうちの人」という言い回しを基本にしています（`data/kids-question.ts`）。
 
+> **今回変更しなかったこと**: 通常モードで6問終了後に必ず表示する
+> 「今日はお子さまとご一緒ですか？」（`KidsGateScreen`）は、構造を変えていません。
+> 実店舗運用後に `diagnosis_complete` に対する `kids-gate` 到達後の離脱率を見てから、
+> 表示要否・文言・スキップ可否などを A/B 検討する対象です。
+
 ## 15. 商品推薦モード（table / before-order）
 
 このサービスは卓上・食事中の利用が中心のため、既定では食事系（`category: "plate"`）の
@@ -283,14 +298,30 @@ npm run distribution
   → `/api/diagnose` まで一貫して同じ mode を使うため、画面の表示と AI の文章がずれません）。
 - 実装は単純なフィルタです（`lib/recommendation.ts` の `isSetAllowedInMode`）。plate を含む
   組み合わせを候補から外すだけで、スコアリング自体は変えていません。
+- `before-order` では、価格が `null` のプレート商品（例: タニタコラボプレート）を含む提案が
+  出ることがあります。このとき「合計 ¥xxx」とは表示しません（誤認防止。下記）。
 
-## 16. 「今回のあなたをつくった3つの選択」
+### 価格不明の商品を含むときの表示（誤認防止）
 
-結果への納得感を上げるため、ファーストビューにタイプ判定の根拠を3つ添えます（AIには選ばせません）。
+`lib/price-display.ts` の `buildPriceDisplay(hasUnpricedItem, totalPrice, unpricedNames)` が、
+`RecommendationCard` と `OrderScreen` の両方で同じ表示ロジックを使うよう一本化しています。
 
-- `lib/highlights.ts` の `pickHighlights(main, answers, 3)` が、メインタイプの `main`/`sub` に
-  実際に加点した回答の中から、質問の theme（性格・今日の気分・味覚・過ごし方）が
-  できるだけ重ならないよう3つを選びます。完全に決定論で、同じ回答なら常に同じ3つになります。
+- 価格不明の商品が無ければ、通常どおり「合計 ¥xxx（税込）」。
+- 価格不明の商品が1つでもあれば、**「合計」という言葉は絶対に使わず**、
+  「表示価格 ¥xxx（税込）」＋「＋ ◯◯（価格はスタッフにご確認ください）」の2行で表示します。
+  「確認できる商品だけの金額」であることが伝わるようにするためです。
+
+## 16. 「この結果につながった選択」
+
+結果への納得感を上げるため、ファーストビューにタイプ判定の根拠を添えます（AIには選ばせません）。
+
+- `lib/highlights.ts` の `pickHighlights(main, answers, 3)` が、メインタイプに**実際に
+  加点した**回答（`choice.main === main` または `choice.sub === main`）だけを対象に、
+  質問の theme（性格・今日の気分・味覚・過ごし方）ができるだけ重ならないよう最大3件選びます。
+  完全に決定論で、同じ回答なら常に同じ結果になります。
+- **無関係な回答（メインタイプに一切加点していない回答）は、件数を埋めるためであっても
+  絶対に含めません。** そのため表示件数は 0〜3件で変わります（タイトルも固定の「3つ」と
+  言わない表現にしています）。
 - 表示は `components/HighlightAnswers.tsx`。表示された時点で `diagnosis_reason_view` を記録します。
 
 ## 17. 結果カードについて（記念カード）
@@ -303,30 +334,76 @@ npm run distribution
 
 ## 18. E2Eテスト（Playwright）
 
-`e2e/` に、スマートフォン相当のビューポート（390×844・375×667）で通しの動作を確認する
-最低限のテストがあります。OpenAI・Supabase の環境変数を与えなくても
-（フォールバック文・ログ無送信で）完結します。
+`e2e/` に、スマートフォン相当の環境で通しの動作を確認する最低限のテストがあります。
+OpenAI・Supabase の環境変数を与えなくても（フォールバック文・ログ無送信で）完結します。
 
 ```bash
-npx playwright install chromium   # 初回のみ（ブラウザ本体の取得）
+npx playwright install chromium webkit   # 初回のみ（ブラウザ本体の取得）
 npm run test:e2e
 ```
 
+`playwright.config.ts` は3つの project（ブラウザ×ビューポート）で同じテストを実行します。
+
+| project | ブラウザ | 用途 |
+| --- | --- | --- |
+| `iphone-390` | Chromium・390×844 | 標準的なスマホ幅 |
+| `iphone-se-375` | Chromium・375×667 | 小さめの端末幅 |
+| `webkit-iphone-13` | **WebKit**（`devices["iPhone 13"]`） | 実際の iPhone/Safari に近い環境 |
+
 - `e2e/normal-flow.spec.ts`: TOP → 診断開始 → 6問 → 待機演出 → 「いいえ」 → 結果 →
-  おすすめ表示 → 注文画面を開く → 閉じる。TOPに「親子で楽しむ」導線があることも確認。
-- `e2e/parent-child-flow.spec.ts`: TOP → 親子モード → 6問 → 子ども向け質問 → 子どもが回答 →
-  結果に「お子さまが選んだ今日のごほうび」が反映されていること → おすすめ表示。
+  おすすめ表示 → 注文画面を開く（ビューポート内に収まることを確認）→ 閉じる →
+  結果カード保存（Canvas生成が例外を出さないこと）。TOPに「親子で楽しむ」導線があることも確認。
+- `e2e/parent-child-flow.spec.ts`: TOP → 親子モード → 6問 → 子ども向け質問（タップ領域が
+  44px以上であることを確認）→ 子どもが回答 → 結果に「お子さまが選んだ今日のごほうび」が
+  反映されていること → おすすめ表示。
 - `playwright.config.ts` が `npm run dev` を自動起動します（既に起動中ならそれを使い回します）。
+- WebKit ブラウザが未導入の場合は `npx playwright install webkit` を実行してください
+  （Chromium は既に導入済みでも WebKit は別途ダウンロードが必要です）。
+
+## 19. 分析ファネル（実店舗で見るべき指標）
+
+匿名ログから見るべき基本ファネル（すべて `supabase/schema.sql` の `diagnosis_events` から取得）:
+
+```
+QR流入
+  ↓
+diagnosis_start        診断開始
+  ↓
+question_answered ×6   Q6まで回答（Q6後の question_answered が「Q6完了」の目安）
+  ↓
+kids-gate              「今日はお子さまとご一緒ですか？」画面（離脱率をここで見る。§14）
+  ↓
+diagnosis_complete     結果生成（タイプ判定完了）
+  ↓
+recommendation_view    おすすめ表示
+  ↓
+order_cta_tap          「スタッフに注文画面を見せる」を押した
+  ↓
+order_screen_view      注文画面が実際に表示された
+```
+
+**`order_screen_view` は購入ではありません。** 実際に売れたかどうかは、この匿名ログではなく
+POS 側のデータで確認してください。店舗での検証では、次のような指標を見る想定です。
+
+- 診断開始率（QR流入 → `diagnosis_start`）
+- 診断完了率（`diagnosis_start` → `diagnosis_complete`）
+- Q6後の離脱（`question_answered`（Q6）→ `kids-gate` に届かない割合）
+- おすすめ表示率（`diagnosis_complete` → `recommendation_view`）
+- 注文CTA率（`recommendation_view` → `order_cta_tap`）
+- 注文画面表示率（`order_cta_tap` → `order_screen_view`）
+- 対象商品のPOS販売数（診断のおすすめ対象商品が、実際にどれだけ売れたか。POS側で確認）
+- 甘味追加率／ドリンク追加率（診断きっかけの追加注文が増えたか。POS側で確認）
+- 客単価（診断利用テーブルとそれ以外での比較。POS側で確認）
 
 ## テスト・ビルドコマンド
 
 ```bash
 npm run typecheck   # tsc --noEmit
 npm run lint        # ESLint（next/core-web-vitals + next/typescript）
-npm test            # vitest run（診断・推薦・タイブレーク・3つの選択・AI検証・フォールバック）
+npm test            # vitest run（診断・推薦・タイブレーク・結果の選択・価格表示・AI検証・フォールバック）
 npm run build        # 本番ビルド（型チェック込み）
 npm run distribution # 配点分布レポート
-npm run test:e2e     # Playwright（通常フロー／親子フローの一気通貫確認。§18）
+npm run test:e2e     # Playwright（通常フロー／親子フローの一気通貫確認。Chromium×2 + WebKit。§18）
 ```
 
 ## 注意

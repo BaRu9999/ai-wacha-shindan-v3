@@ -33,8 +33,13 @@ export function isRecommendationMode(value: unknown): value is RecommendationMod
 export type RecommendationSignals = {
   /** Q4 味覚 */
   taste: "rich" | "comfort" | "elegant" | "gentle" | null;
-  /** Q1 今日の気分 */
-  moodStart: "settle" | "talk" | "outing" | "clearHead" | null;
+  /**
+   * Q1 今日の気分。
+   * "flexible" は q1d「そのときの気分で、決める」を表す。これは「頭をすっきりさせたい」
+   * という意味ではなく「決めない・その場に委ねる」という意味なので、商品の傾向を
+   * 勝手に決めつけないよう、leanScores では加点しない（下記参照）。
+   */
+  moodStart: "settle" | "talk" | "outing" | "flexible" | null;
   /** Q5 ごほうび */
   spend: "drink" | "healthy" | "showy" | "sweet" | null;
   /** Q6 どうなりたいか */
@@ -71,7 +76,7 @@ export function deriveSignals(
       q1a: "settle",
       q1b: "talk",
       q1c: "outing",
-      q1d: "clearHead",
+      q1d: "flexible",
     }),
     spend: mapValue(pickChoiceId(answers, "q5"), {
       q5a: "drink",
@@ -109,7 +114,8 @@ export function leanScores(signals: RecommendationSignals): Record<Lean, number>
 
   // 今日の気分(Q1)
   if (signals.moodStart === "settle") drink += 2; // 静かに整える → 一杯中心
-  if (signals.moodStart === "clearHead") light += 1;
+  // "flexible"（そのときの気分で決める）は、意図的にどの lean にも加点しない。
+  // 「決めない」という回答から商品の傾向を決めつけないため。
 
   // どうなりたいか(Q6)
   if (signals.endWish === "cozy") sweet += 1;

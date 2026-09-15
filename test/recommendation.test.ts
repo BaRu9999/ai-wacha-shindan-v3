@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { Answer, KidsChoiceId } from "@/types";
 import { TEA_KEYS } from "@/types";
+import { choiceById } from "@/data/questions";
 import { products, productSets } from "@/data/products";
-import { chooseSetId, deriveSignals, recommend } from "@/lib/recommendation";
+import { chooseSetId, deriveSignals, leanScores, recommend } from "@/lib/recommendation";
 
 /**
  * 仕様13・27-3: 商品推薦ロジックテスト。
@@ -108,8 +109,9 @@ describe("同じタイプでも回答で提案が変わる", () => {
   });
 
   it("子どもが「甘いごほうび」を選ぶと甘味方向に寄る", () => {
-    // 素の回答は軽さがやや優勢（light=2, sweet=1）
-    const base = answersFrom({ q1: "q1d", q4: "q4c", q5: "q5c", q6: "q6a" });
+    // 素の回答は light=2・sweet=0（drink=3が最大だが rooibos に drink 用のセットが無いため light に解決）。
+    // kids="sweet" が sweet+=2 すると light と同点になり、タイブレークで sweet が勝つ。
+    const base = answersFrom({ q1: "q1b", q4: "q4b", q5: "q5a", q6: "q6c" });
     const withoutKids = chooseSetId("rooibos", deriveSignals(base, null));
     const withKids = chooseSetId("rooibos", deriveSignals(base, "sweet"));
     expect(withoutKids).toBe("rooibos-light");
@@ -147,6 +149,43 @@ describe("商品提案モード（仕様6: 既定は卓上利用向けの table�
       .filter((item) => item.price !== null)
       .reduce((sum, item) => sum + (item.price ?? 0), 0);
     expect(rec.totalPrice).toBe(drinkOnlyTotal);
+  });
+});
+
+describe("Q1d「そのときの気分で、決める」の意味ズレ修正", () => {
+  it("診断タイプ判定用の main/sub は変更しない（biwa/kuwacha のまま）", () => {
+    expect(choiceById.q1d.main).toBe("biwa");
+    expect(choiceById.q1d.sub).toBe("kuwacha");
+  });
+
+  it("q1d は moodStart が 'flexible' になる（'clearHead' ではない）", () => {
+    const answers = answersFrom({ q1: "q1d" });
+    const signals = deriveSignals(answers, null);
+    expect(signals.moodStart).toBe("flexible");
+  });
+
+  it("moodStart='flexible' は sweet/light/drink のどれにも加点しない", () => {
+    const scores = leanScores({
+      taste: null,
+      moodStart: "flexible",
+      spend: null,
+      endWish: null,
+      kids: null,
+    });
+    expect(scores).toEqual({ sweet: 0, light: 0, drink: 0 });
+  });
+
+  it("q1 以外の回答が同じなら、q1a(settle)とq1d(flexible)で drink の加点差が settle 側の+2ぶんだけになる", () => {
+    // settle は drink+=2 を持つが、flexible は何も加点しない。差分がちょうど2であることを確認する。
+    const withSettle = leanScores(
+      deriveSignals(answersFrom({ q1: "q1a", q4: "q4c", q5: "q5c", q6: "q6c" }), null),
+    );
+    const withFlexible = leanScores(
+      deriveSignals(answersFrom({ q1: "q1d", q4: "q4c", q5: "q5c", q6: "q6c" }), null),
+    );
+    expect(withSettle.drink - withFlexible.drink).toBe(2);
+    expect(withSettle.sweet).toBe(withFlexible.sweet);
+    expect(withSettle.light).toBe(withFlexible.light);
   });
 });
 

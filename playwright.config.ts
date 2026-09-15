@@ -25,6 +25,11 @@ export default defineConfig({
       name: "iphone-se-375",
       use: { ...devices["Desktop Chrome"], viewport: { width: 375, height: 667 } },
     },
+    {
+      // 実際の iPhone/Safari に近い環境（WebKit）。仕様5。
+      name: "webkit-iphone-13",
+      use: { ...devices["iPhone 13"] },
+    },
   ],
   webServer: {
     command: "npm run dev",

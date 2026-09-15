@@ -7,6 +7,9 @@ import { answerAllQuestions } from "./helpers";
  * → 注文画面を開く → 閉じる
  */
 test("通常フロー: 診断して結果を見て、注文画面を開いて閉じる", async ({ page }) => {
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
+
   await page.goto("/");
 
   await expect(page.getByTestId("intro-screen")).toBeVisible();
@@ -38,8 +41,22 @@ test("通常フロー: 診断して結果を見て、注文画面を開いて閉
   const orderScreen = page.getByTestId("order-screen");
   await expect(orderScreen).toBeVisible();
   await expect(orderScreen.getByText("ご注文の際は、この画面をスタッフにお見せください。")).toBeVisible();
+
+  // 注文モーダルがビューポート外にはみ出さない（横スクロールが発生しない）。
+  const viewport = page.viewportSize();
+  const box = await orderScreen.boundingBox();
+  if (viewport && box) {
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
+  }
+
   await orderScreen.getByRole("button", { name: "閉じる" }).click();
   await expect(orderScreen).toHaveCount(0);
+
+  // 結果カードの生成（Canvas）が例外を出さない。
+  await page.getByRole("button", { name: "結果カードを保存・共有する" }).click();
+  await page.waitForTimeout(500);
+  expect(pageErrors, pageErrors.map((error) => error.message).join("\n")).toHaveLength(0);
 });
 
 test("TOPに親子で楽しむ導線がある", async ({ page }) => {

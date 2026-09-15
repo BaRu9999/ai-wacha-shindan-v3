@@ -16,6 +16,7 @@ const KNOWN_EVENTS = new Set([
   "product_detail_tap",
   "menu_view_tap",
   "staff_show_tap",
+  "order_cta_tap",
   "order_screen_view",
   "result_detail_expand",
   "result_save",

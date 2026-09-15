@@ -74,6 +74,13 @@
   font-family: var(--font-serif);
 }
 
+.priceNote {
+  margin: 4px 0 0;
+  color: var(--sumi-3);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
 .price span {
   font-size: 10px;
 }

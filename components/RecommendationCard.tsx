@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import type { Product } from "@/data/products";
 import { track } from "@/lib/analytics";
+import { buildPriceDisplay } from "@/lib/price-display";
 import { OrderScreen } from "./OrderScreen";
 import styles from "./RecommendationCard.module.css";
 
@@ -38,6 +39,8 @@ export function RecommendationCard({
   const [orderOpen, setOrderOpen] = useState(false);
 
   const title = items.map((item) => item.name).join(" ＋ ");
+  const unpricedNames = items.filter((item) => item.price === null).map((item) => item.name);
+  const price = buildPriceDisplay(hasUnpricedItem, totalPrice, unpricedNames);
 
   const toggleDetail = () => {
     const next = !detailOpen;
@@ -47,6 +50,13 @@ export function RecommendationCard({
         meta: { productIds: items.map((item) => item.id).join(",") },
       });
     }
+  };
+
+  const openOrderScreen = () => {
+    track("order_cta_tap", {
+      meta: { productIds: items.map((item) => item.id).join(",") },
+    });
+    setOrderOpen(true);
   };
 
   return (
@@ -67,17 +77,18 @@ export function RecommendationCard({
         )}
 
         <p className={styles.price}>
-          {hasUnpricedItem ? "合計目安（一部を除く）" : "合計"}
-          <strong>¥{yen.format(totalPrice)}</strong>
+          {price.label}
+          <strong>¥{yen.format(price.amount)}</strong>
           <span>税込</span>
         </p>
+        {price.note && <p className={styles.priceNote}>{price.note}</p>}
 
         <div className={styles.actions}>
           <button type="button" className={styles.detailButton} onClick={toggleDetail}>
             このおすすめを詳しく見る
             <span aria-hidden="true">{detailOpen ? "︿" : "﹀"}</span>
           </button>
-          <button type="button" className={styles.staffButton} onClick={() => setOrderOpen(true)}>
+          <button type="button" className={styles.staffButton} onClick={openOrderScreen}>
             スタッフに注文画面を見せる
           </button>
         </div>

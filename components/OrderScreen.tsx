@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import type { Product } from "@/data/products";
 import { track } from "@/lib/analytics";
+import { buildPriceDisplay } from "@/lib/price-display";
 import styles from "./OrderScreen.module.css";
 
 type Props = {
@@ -18,12 +19,13 @@ const yen = new Intl.NumberFormat("ja-JP");
  * スタッフ提示用の「注文画面」（仕様5）。
  *
  * 一目で商品名が分かることを優先し、診断の文章は出さない。大きな文字・大きなタップ領域。
- * 表示した時点で `staff_show_tap` と `order_screen_view` を記録する。
- * 注意（仕様16）: この画面を開いたことは「注文意向に近い行動」であって、購入・注文の確定ではない。
+ * イベントは2段階（仕様3）: CTAを押した瞬間は呼び出し側（RecommendationCard）が
+ * `order_cta_tap` を記録し、この画面が実際に表示された瞬間にここで `order_screen_view` を記録する。
+ * `staff_show_tap` は後方互換のため型には残すが、新規には発火しない。
+ * 注意: これらのイベントは「注文意向に近い行動」であって、購入・注文の確定ではない。
  */
 export function OrderScreen({ items, totalPrice, hasUnpricedItem, onClose }: Props) {
   useEffect(() => {
-    track("staff_show_tap");
     track("order_screen_view", {
       meta: { productIds: items.map((item) => item.id).join(",") },
     });
@@ -31,6 +33,7 @@ export function OrderScreen({ items, totalPrice, hasUnpricedItem, onClose }: Pro
   }, []);
 
   const unpricedNames = items.filter((item) => item.price === null).map((item) => item.name);
+  const price = buildPriceDisplay(hasUnpricedItem, totalPrice, unpricedNames);
 
   return (
     <div
@@ -53,16 +56,12 @@ export function OrderScreen({ items, totalPrice, hasUnpricedItem, onClose }: Pro
         </ul>
 
         <p className={styles.total}>
-          {hasUnpricedItem ? "合計（一部を除く）" : "合計"}
-          <strong>¥{yen.format(totalPrice)}</strong>
+          {price.label}
+          <strong>¥{yen.format(price.amount)}</strong>
           <span className={styles.tax}>税込</span>
         </p>
 
-        {unpricedNames.length > 0 && (
-          <p className={styles.note}>
-            ※ {unpricedNames.join("・")}は、価格を店舗にてご確認ください。
-          </p>
-        )}
+        {price.note && <p className={styles.note}>{price.note}</p>}
 
         <p className={styles.instruction}>
           ご注文の際は、この画面をスタッフにお見せください。

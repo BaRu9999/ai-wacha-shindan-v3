@@ -17,7 +17,12 @@ test("親子フロー: 親子で楽しむから開始すると、子どもの回
   await expect(page.getByTestId("kids-question-screen")).toBeVisible();
   await expect(page.getByText("最後の一問は、お子さまに。")).toBeVisible();
 
-  await page.getByRole("button", { name: "あまいごほうび" }).click();
+  // 子ども向けの3択は、狭すぎないタップ領域を確保する（目安 44px 程度・仕様18）。
+  const sweetChoice = page.getByRole("button", { name: "あまいごほうび" });
+  const box = await sweetChoice.boundingBox();
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+  await sweetChoice.click();
 
   // 選んだ直後に短い演出が出る（タップで先に進められる）。
   const reveal = page.getByTestId("kids-reveal-screen");
